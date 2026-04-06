@@ -1,1 +1,18 @@
-Will add
+Part 1:
+
+Row Key & Sharding: 
+For this dataset I would use a row key based on a hashed VIN combined with the DOL vehicle ID. I chose this because VIN values are different for each vehicle and hashing them helps spread the data evenly across the system. This helps avoids hotspotting opposed especially compared to using something like model year since newer cars might all go to the same shard and cause uneven load. The downside is that this makes it harder to query by things like City or Make since the data is spread out randomly. Vehicles from the same city or same brand won’t be stored together so queries like “all Teslas” would be less efficient and might need extra indexing. Overall, this row key is good for even distribution and performance, but not ideal for certain types of queries.
+
+Column Families: 
+I would group the attributes into column families based on how they are related and how they are likely to be accessed together. One column family would be identity and would include the VIN  and DOL Vehicle ID effectively storing the main identifiers for each vehicle. Another column family would be location which would include County, City, State, Postal Code, Legislative District, 2020 Census Tract, Vehicle Location, and Electric Utility. A third column family would be vehicle info, which includes Model Year, Make, Model, Electric Vehicle Type, Electric Range, and CAFV Eligibility, and this would store the main details about the vehicle itself. This design improves distributed read performance because Bigtable stores data by column family so related fields are stored together. This means that if an application only needs vehicle details such as make, model, and year, it can read just the vehicle info column family instead of reading all the other data. As a result, this reduces unnecessary data transfer and improves efficiency.
+
+Horizontal Scaling:
+A hashed shard key is good for spreading data evenly across the system. Because hashing randomizes where data goes writes are distributed across many nodes helping to avoid hotspotting and keeping performance balanced. The downside is that queries that look for a range of values are less efficient because the data is spread out across different nodes. A range-based shard key is better for queries that look for grouped data. For example, finding all vehicles from 2023 would be faster because those records are stored close together. However, this can cause hotspotting if many new records have similar values, since they will all go to the same part of the system. Overall, a hashed shard key is better for even performance and handling lots of writes, while a range-based shard key is better for specific queries but can lead to uneven distribution. 
+
+
+Part 4:
+
+insert-fast average latency: 6.91 ms
+insert-slow average latency: 21.88 ms
+A real world scenario where I would choose the faster primary-only write is something like tracking user views on a media website. In this case it’s more important that the system responds quickly and doesn’t slow down the user experience. If a few records are lost because the primary crashes it is fine since the data isn’t critical. As such I would accept the risk of losing some data in exchange for an almost 14ms decrease in latency.
+
