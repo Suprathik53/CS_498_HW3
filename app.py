@@ -26,7 +26,7 @@ def insert_fast(payload: dict):
 @app.post("/insert-safe")
 def insert_safe(payload: dict):
     try:
-        insert_safe_collection = collection.with_options(write_concern=WriteConcern(w=3))
+        insert_safe_collection = collection.with_options(write_concern=WriteConcern(w="majority"))
         ret = insert_safe_collection.insert_one(payload)
         return {"inserted_id": str(ret.inserted_id)}
     except Exception as e:
